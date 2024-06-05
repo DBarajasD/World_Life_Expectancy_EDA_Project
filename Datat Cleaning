@@ -1,4 +1,4 @@
-## Before starting my data exploration I made changed to the data that was presented. I removed duplicate data, updated missing data and updated blank rows. 
+Before starting my data exploration I made changed to the data that was presented. I removed duplicate data, updated missing data and updated blank rows. 
 
 -- Find Duplicates
 SELECT country, year, concat(Country, year), count(concat(Country, year))
