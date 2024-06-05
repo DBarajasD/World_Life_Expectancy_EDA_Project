@@ -1,0 +1,111 @@
+The following code was used to perform exploratory data analysis.
+
+SELECT *
+FROM worldlifeexpectancy;
+
+-- Life Expectancy Min, Max, and Difference 
+SELECT country, 
+  MIN(lifeexpectancy), 
+  MAX(lifeexpectancy), 
+  ROUND(MAX(Lifeexpectancy) - MIN(Lifeexpectancy), 1) AS Life_Increase
+FROM worldlifeexpectancy
+GROUP BY country
+HAVING MIN(Lifeexpectancy) <> 0
+  AND MAX(Lifeexpectancy) <> 0
+ORDER BY Life_Increase DESC;
+
+-- Average Life Expectancy Per Year
+SELECT year, ROUND(avg(Lifeexpectancy), 2) AS average_life_exp
+FROM worldlifeexpectancy
+WHERE lifeexpectancy <> 0
+AND Lifeexpectancy <> 0
+GROUP BY year
+ORDER BY year ;
+
+-- Finding Corelation with GDP and Life Expectancy 
+SELECT country, ROUND(AVG(lifeexpectancy), 2) as life_exp, ROUND(AVG(GDP),1) as GDP
+FROM worldlifeexpectancy
+GROUP BY country
+HAVING life_exp > 0
+AND GDP > 0
+ORDER BY GDP ASC;
+
+SELECT country, ROUND(AVG(lifeexpectancy), 2) as life_exp, ROUND(AVG(GDP),1) as GDP
+FROM worldlifeexpectancy
+GROUP BY country
+HAVING life_exp > 0
+AND GDP > 0
+ORDER BY GDP DESC
+;
+
+-- Case Statement to compare GDP and Life Expectancy 
+	-- High GDP Correlated to High Life Expectancy 
+
+SELECT SUM(CASE WHEN GDP >= 1500 THEN 1 ELSE 0 END) AS High_GDP_Count,
+  ROUND(AVG(CASE WHEN GDP >= 1500 THEN lifeexpectancy ELSE NULL END),2) AS High_Life_Expectancy,
+  SUM(CASE WHEN GDP <= 1500 THEN 1 ELSE 0 END) AS Low_GDP_Count,
+  ROUND(AVG(CASE WHEN GDP <= 1500 THEN lifeexpectancy ELSE NULL END),2) AS Low_Life_Expectancy
+FROM worldlifeexpectancy ;
+
+-- Finding Average Life Expectancy based on country status
+SELECT status, ROUND(AVG(lifeexpectancy),1)
+FROM worldlifeexpectancy
+GROUP BY status ;
+
+-- Number of Developed vs Developing Countries
+SELECT status, COUNT(Distinct Country)
+FROM worldlifeexpectancy
+GROUP BY status ;
+
+-- Looking for correlation between BMI and Life Expectancy 
+SELECT country, 
+  ROUND(AVG(lifeexpectancy),1) AS life_exp,
+  ROUND(AVG(BMI),1) AS BMI
+FROM worldlifeexpectancy
+GROUP BY country
+HAVING life_exp >0
+  AND BMI > 0
+ORDER BY BMI DESC ;
+
+SELECT country, 
+  ROUND(AVG(lifeexpectancy),1) AS life_exp,
+  ROUND(AVG(BMI),1) AS BMI
+FROM worldlifeexpectancy
+GROUP BY country
+HAVING life_exp >0
+  AND BMI > 0
+ORDER BY BMI ASC;
+
+-- Adult Mortality in the United States over 15 Years
+SELECT country, 
+  Year,
+  Lifeexpectancy,
+  Adultmortality,
+  SUM(Adultmortality) OVER(Partition BY country ORDER BY Year) AS Rolling_total
+FROM worldlifeexpectancy 
+WHERE country like '%United States%';
+
+-- Infant Deaths in the United States over 15 Years
+SELECT country, 
+  lifeexpectancy, 
+  infantdeaths, 
+  SUM(Infantdeaths) Over(Partition by country ORDER BY Year) as Rolling_total 
+FROM Worldlifeexpectancy 
+WHERE country like '%United States%';
+
+-- Adult Mortality in the Mexico over 15 Years
+SELECT country, 
+  Year,
+  Lifeexpectancy,
+  Adultmortality,
+  SUM(Adultmortality) OVER(Partition BY country ORDER BY Year) AS Rolling_total
+FROM worldlifeexpectancy 
+WHERE country = 'Mexico';
+
+-- Infant Deaths in Mexico over 15 Years
+SELECT country, 
+  lifeexpectancy, 
+  infantdeaths,year, 
+  SUM(Infantdeaths) Over(Partition by country ORDER BY Year) as Rolling_total 
+FROM Worldlifeexpectancy 
+WHERE country = 'Mexico';
