@@ -1,0 +1,96 @@
+## Before starting my data exploration I made changed to the data that was presented. I removed duplicate data, updated missing data and updated blank rows. 
+
+-- Find Duplicates
+SELECT country, year, concat(Country, year), count(concat(Country, year))
+FROM worldlifeexpectancy
+GROUP BY country, year, concat(Country, year)
+HAVING count(concat(Country, year)) > 1;
+
+-- Create Row Numbers 
+SELECT Row_ID, 
+concat(Country, year),
+ROW_NUMBER() OVER( PARTITION BY concat(Country, year) ORDER BY concat(Country, year)) as Row_NUM
+FROM worldlifeexpectancy;
+
+-- Find Duplicate Row Numbers
+SELECT *
+FROM (SELECT Row_ID, 
+	concat(Country, year),
+	ROW_NUMBER() OVER( PARTITION BY concat(Country, year) ORDER BY concat(Country, year)) as Row_NUM
+	FROM worldlifeexpectancy) as Row_Table
+WHERE Row_Num > 1;
+
+-- Remove Duplicate Row Numbers
+DELETE FROM worldlifeexpectancy
+WHERE 
+	Row_ID IN (
+	SELECT Row_ID
+FROM (
+    SELECT Row_ID, 
+	concat(Country, year),
+	ROW_NUMBER() OVER( PARTITION BY concat(Country, year) ORDER BY concat(Country, year)) as Row_NUM
+	FROM worldlifeexpectancy
+    ) as Row_Table
+WHERE Row_Num > 1
+    );
+
+-- Finding Blank Status 
+SELECT *
+FROM worldlifeexpectancy
+WHERE status = '';
+
+SELECT DISTINCT(status)
+FROM worldlifeexpectancy
+WHERE status <> '';
+
+SELECT DISTINCT(country)
+FROM worldlifeexpectancy
+WHERE status = 'Developing';
+
+-- Update Developing Status
+UPDATE worldlifeexpectancy t1
+JOIN worldlifeexpectancy t2
+	on t1.Country = t2.Country
+SET t1.Status = 'Developing'
+WHERE t1.Status = ''
+AND t2.Status <> ''
+AND t2.Status = 'Developing';
+
+-- Update Developed Status
+UPDATE worldlifeexpectancy t1
+JOIN worldlifeexpectancy t2
+	on t1.Country = t2.Country
+SET t1.Status = 'Developed'
+WHERE t1.Status = ''
+AND t2.Status <> ''
+AND t2.Status = 'Developed';
+
+-- Find Missing Life Expectancy 
+SELECT *
+FROM worldlifeexpectancy
+WHERE Lifeexpectancy = '' ;
+
+-- Find Missing Life Expectancy Using Average of Other Years
+SELECT t1.country, t1.year, t1.lifeexpectancy, 
+t2.country, t2.year, t2.lifeexpectancy,
+t3.country, t3.year, t3.lifeexpectancy,
+ROUND((t2.lifeexpectancy + t3.Lifeexpectancy)/2 ,1)  
+FROM worldlifeexpectancy t1
+JOIN worldlifeexpectancy t2
+	ON t1.country = t2.country
+    AND t1.year = t2.year -1
+JOIN worldlifeexpectancy t3
+	ON t1.country = t3.country
+    AND t1.year = t3.year +1 
+WHERE t1.lifeexpectancy = '';
+
+-- UPDATE Life Expectancy 
+UPDATE worldlifeexpectancy t1
+JOIN worldlifeexpectancy t2
+	ON t1.country = t2.country
+    AND t1.year = t2.year -1
+JOIN worldlifeexpectancy t3
+	ON t1.country = t3.country
+    AND t1.year = t3.year +1
+SET t1.lifeexpectancy = ROUND((t2.lifeexpectancy + t3.Lifeexpectancy)/2 ,1) 
+WHERE t1.lifeexpectancy = '';
